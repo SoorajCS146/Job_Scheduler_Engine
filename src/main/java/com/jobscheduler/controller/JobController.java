@@ -1,79 +1,64 @@
 package com.jobscheduler.controller;
 
-import com.jobscheduler.engine.JobExecutor;
-import com.jobscheduler.engine.JobScheduler;
-import com.jobscheduler.job.*;
-import com.jobscheduler.model.Job;
+import com.jobscheduler.dto.JobResponse;
+import com.jobscheduler.dto.SubmitJobRequest;
+import com.jobscheduler.service.JobService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
+/**
+ * REST Controller for job operations.
+ * Uses DTOs and delegates to service layer.
+ * NO SWITCH STATEMENT - clean and focused on HTTP concerns.
+ */
 @RestController
 @RequestMapping("/api/v1/jobs")
 public class JobController {
 
     @Autowired
-    private JobExecutor jobExecutor;
+    private JobService jobService;
 
-    @Autowired
-    private JobScheduler jobScheduler;
-
+    /**
+     * Submit a new job.
+     *
+     * @param request SubmitJobRequest DTO
+     * @return Job ID
+     */
     @PostMapping
-    public ResponseEntity<Map<String, Integer>> submitJob(@RequestBody Map<String, Object> request) {
-        String jobType = (String) request.get("jobType");
-
-        JobType job = createJobFromRequest(jobType, request);
-
-        Job jobWrapper = new Job(job);
-        int jobId = jobExecutor.submitJob(jobWrapper);
-        jobScheduler.scheduleJob(jobId);
-
-        return ResponseEntity.ok(Map.of("jobId", jobId));
+    public ResponseEntity<Map<String, Integer>> submitJob(@RequestBody SubmitJobRequest request) {
+        int jobId = jobService.submitJob(request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(Map.of("jobId", jobId));
     }
 
-    private JobType createJobFromRequest(String jobType, Map<String, Object> request) {
-        switch (jobType) {
-            case "ReportGeneration":
-                ReportGeneration rg = new ReportGeneration();
-                rg.reportName = (String) request.get("reportName");
-                rg.department = (String) request.get("department");
-                return rg;
-
-            case "EmailNotification":
-                EmailNotification en = new EmailNotification();
-                en.subject = (String) request.get("subject");
-                en.recipientCount = ((Number) request.get("recipientCount")).intValue();
-                return en;
-
-            case "DataCleanup":
-                DataCleanup dc = new DataCleanup();
-                dc.tableName = (String) request.get("tableName");
-                dc.olderThanDays = ((Number) request.get("olderThanDays")).intValue();
-                return dc;
-
-            case "DataSync":
-                DataSync ds = new DataSync();
-                ds.sourceSystem = (String) request.get("sourceSystem");
-                ds.targetSystem = (String) request.get("targetSystem");
-                ds.recordCount = ((Number) request.get("recordCount")).intValue();
-                return ds;
-
-            default:
-                throw new IllegalArgumentException("Unknown job type: " + jobType);
-        }
-    }
-
+    /**
+     * Get a job by ID.
+     *
+     * @param id Job ID
+     * @return JobResponse DTO
+     */
     @GetMapping("/{id}")
-    public ResponseEntity<Job> getJob(@PathVariable int id) {
-        return ResponseEntity.ok(jobExecutor.getJobById(id));
+    public ResponseEntity<JobResponse> getJob(@PathVariable int id) {
+        JobResponse response = jobService.getJob(id);
+        if (response == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(response);
     }
 
+    /**
+     * Get all jobs.
+     *
+     * @return List of JobResponse DTOs
+     */
     @GetMapping
-    public ResponseEntity<Map<Integer, Job>> getAllJobs() {
-        // Get all jobs
-        return ResponseEntity.ok(jobExecutor.getAllJobs());
-        // Return map
+    public ResponseEntity<List<JobResponse>> getAllJobs() {
+        List<JobResponse> jobs = jobService.getAllJobs();
+        return ResponseEntity.ok(jobs);
     }
 }

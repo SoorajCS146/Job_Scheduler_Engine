@@ -7,7 +7,7 @@ echo ""
 curl -X POST http://localhost:8080/api/v1/jobs \
   -H "Content-Type: application/json" \
   -d '{
-    "jobType": "ReportGeneration",
+    "jobType": "REPORT_GENERATION",
     "reportName": "Q1 Sales Report",
     "department": "Finance"
   }' &
@@ -16,7 +16,7 @@ curl -X POST http://localhost:8080/api/v1/jobs \
 curl -X POST http://localhost:8080/api/v1/jobs \
   -H "Content-Type: application/json" \
   -d '{
-    "jobType": "EmailNotification",
+    "jobType": "EMAIL_NOTIFICATION",
     "subject": "Monthly Newsletter",
     "recipientCount": 100
   }' &
@@ -25,7 +25,7 @@ curl -X POST http://localhost:8080/api/v1/jobs \
 curl -X POST http://localhost:8080/api/v1/jobs \
   -H "Content-Type: application/json" \
   -d '{
-    "jobType": "DataCleanup",
+    "jobType": "DATA_CLEANUP",
     "tableName": "logs",
     "olderThanDays": 30
   }' &
@@ -34,7 +34,7 @@ curl -X POST http://localhost:8080/api/v1/jobs \
 curl -X POST http://localhost:8080/api/v1/jobs \
   -H "Content-Type: application/json" \
   -d '{
-    "jobType": "DataSync",
+    "jobType": "DATA_SYNC",
     "sourceSystem": "MySQL",
     "targetSystem": "PostgreSQL",
     "recordCount": 1000
@@ -44,7 +44,7 @@ curl -X POST http://localhost:8080/api/v1/jobs \
 curl -X POST http://localhost:8080/api/v1/jobs \
   -H "Content-Type: application/json" \
   -d '{
-    "jobType": "ReportGeneration",
+    "jobType": "REPORT_GENERATION",
     "reportName": "Q2 Marketing Report",
     "department": "Marketing"
   }' &
