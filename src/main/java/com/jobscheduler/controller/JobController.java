@@ -61,4 +61,11 @@ public class JobController {
         List<JobResponse> jobs = jobService.getAllJobs();
         return ResponseEntity.ok(jobs);
     }
+
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> cancelJob(@PathVariable int id) {
+        jobService.cancelJob(id);
+        return ResponseEntity.noContent().build();
+    }
 }

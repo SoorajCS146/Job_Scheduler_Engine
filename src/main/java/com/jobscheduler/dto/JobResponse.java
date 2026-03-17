@@ -1,5 +1,6 @@
 package com.jobscheduler.dto;
 
+import com.jobscheduler.model.JobPriority;
 import com.jobscheduler.model.JobState;
 import com.jobscheduler.model.JobType;
 
@@ -17,7 +18,9 @@ public class JobResponse {
     private Instant submittedTime;
     private Instant startTime;
     private Instant completedTime;
-    
+    private JobPriority jobPriority;
+    private Long timeoutSeconds;
+
     // Getters and Setters
     public int getJobId() {
         return jobId;
@@ -66,5 +69,23 @@ public class JobResponse {
     public void setCompletedTime(Instant completedTime) {
         this.completedTime = completedTime;
     }
+
+
+    public JobPriority getJobPriority() {
+        return jobPriority;
+    }
+
+    public void setJobPriority(JobPriority jobPriority) {
+        this.jobPriority = jobPriority;
+    }
+
+    public Long getTimeoutSeconds() {
+        return timeoutSeconds;
+    }
+
+    public void setTimeoutSeconds(Long timeoutSeconds) {
+        this.timeoutSeconds = timeoutSeconds;
+    }
+
 }
 

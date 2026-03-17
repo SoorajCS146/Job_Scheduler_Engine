@@ -10,16 +10,19 @@ import org.springframework.stereotype.Component;
 public class ReportGenerationHandler implements JobTypeHandler {
 
     @Override
-    public void execute(JobData jobData) {
+    public void execute(JobData jobData) throws InterruptedException {
         log.info("📊 Generating Report: {}", jobData.getReportName());
         log.info("   Department: {}", jobData.getDepartment());
 
-        try {
-            // Simulate report generation (3-6 seconds)
-            Thread.sleep(3000 + (int)(Math.random() * 3000));
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("Report generation interrupted", e);
+        // Simulate report generation (3-6 seconds) - interruptible
+        int totalTime = 3000 + (int)(Math.random() * 3000);
+        int iterations = totalTime / 100;
+
+        for (int i = 0; i < iterations; i++) {
+            if (Thread.currentThread().isInterrupted()) {
+                throw new InterruptedException("Report generation cancelled");
+            }
+            Thread.sleep(100);
         }
 
         log.info("✓ Report '{}' generated for {} department", jobData.getReportName(), jobData.getDepartment());

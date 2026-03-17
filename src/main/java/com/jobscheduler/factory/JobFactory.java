@@ -20,7 +20,14 @@ public class JobFactory {
      */
     public static JobData createJobData(SubmitJobRequest request) {
         JobData jobData = new JobData(request.getJobType());
-        
+
+        // Only override defaults if provided
+        if (request.getJobPriority() != null) {
+            jobData.setJobPriority(request.getJobPriority());
+        }
+        if (request.getTimeoutSeconds() != null) {
+            jobData.setTimeoutSeconds(request.getTimeoutSeconds());
+        }
         // Map fields based on job type
         switch (request.getJobType()) {
             case REPORT_GENERATION:
@@ -31,6 +38,7 @@ public class JobFactory {
             case EMAIL_NOTIFICATION:
                 jobData.setSubject(request.getSubject());
                 jobData.setRecipientCount(request.getRecipientCount());
+
                 break;
                 
             case DATA_CLEANUP:
@@ -65,6 +73,8 @@ public class JobFactory {
         response.setSubmittedTime(jobData.getSubmittedTime());
         response.setStartTime(jobData.getStartTime());
         response.setCompletedTime(jobData.getCompletedTime());
+        response.setJobPriority(jobData.getJobPriority());
+        response.setTimeoutSeconds(jobData.getTimeoutSeconds());
         return response;
     }
 }

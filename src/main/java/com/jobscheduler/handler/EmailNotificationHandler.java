@@ -10,17 +10,19 @@ import org.springframework.stereotype.Component;
 public class EmailNotificationHandler implements JobTypeHandler {
 
     @Override
-    public void execute(JobData jobData) {
+    public void execute(JobData jobData) throws InterruptedException {
         int time = Math.max(100 * jobData.getRecipientCount(), 2000);
 
         log.info("📧 Sending emails to {} recipients", jobData.getRecipientCount());
         log.info("   Subject: {}", jobData.getSubject());
 
-        try {
-            Thread.sleep(time);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("Email sending interrupted", e);
+        // Interruptible sleep - check every 100ms
+        int iterations = time / 100;
+        for (int i = 0; i < iterations; i++) {
+            if (Thread.currentThread().isInterrupted()) {
+                throw new InterruptedException("Email sending cancelled");
+            }
+            Thread.sleep(100);
         }
 
         log.info("✓ Emails sent successfully");

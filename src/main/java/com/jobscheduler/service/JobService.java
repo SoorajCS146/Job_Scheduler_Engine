@@ -68,5 +68,9 @@ public class JobService {
                 .map(JobFactory::toJobResponse)
                 .collect(Collectors.toList());
     }
+
+    public void cancelJob(int jobId) {
+        jobScheduler.cancelJob(jobId);
+    }
 }
 

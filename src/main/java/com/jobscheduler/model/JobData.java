@@ -27,12 +27,22 @@ public class JobData {
     private String sourceSystem;
     private String targetSystem;
     private Integer recordCount;
-    
+
+
+    //Priority fields
+    private JobPriority jobPriority;
+
+
+    //Time out fields
+    private Long timeoutSeconds;
+
     // Constructor
     public JobData(JobType jobType) {
         this.jobType = jobType;
         this.jobState = JobState.SUBMITTED;
         this.submittedTime = Instant.now();
+        this.jobPriority = JobPriority.MEDIUM;
+        this.timeoutSeconds = 30L;
     }
     
     // Getters and Setters
@@ -154,6 +164,21 @@ public class JobData {
     
     public void setRecordCount(Integer recordCount) {
         this.recordCount = recordCount;
+    }
+
+    public JobPriority getJobPriority() {
+        return jobPriority;
+    }
+
+    public void setJobPriority(JobPriority jobPriority) {
+        this.jobPriority = jobPriority;
+    }
+    public Long getTimeoutSeconds() {
+        return timeoutSeconds;
+    }
+
+    public void setTimeoutSeconds(Long timeoutSeconds) {
+        this.timeoutSeconds = timeoutSeconds;
     }
 }
 

@@ -1,5 +1,6 @@
 package com.jobscheduler.dto;
 
+import com.jobscheduler.model.JobPriority;
 import com.jobscheduler.model.JobType;
 
 /**
@@ -27,7 +28,14 @@ public class SubmitJobRequest {
     private String sourceSystem;
     private String targetSystem;
     private Integer recordCount;
-    
+
+    // Priority fields
+    private JobPriority jobPriority;
+
+    //Time out fields
+    private Long timeoutSeconds;
+
+
     // Getters and Setters
     public JobType getJobType() {
         return jobType;
@@ -108,5 +116,22 @@ public class SubmitJobRequest {
     public void setRecordCount(Integer recordCount) {
         this.recordCount = recordCount;
     }
+
+    public JobPriority getJobPriority() {
+        return jobPriority;
+    }
+
+    public void setJobPriority(JobPriority jobPriority) {
+        this.jobPriority = jobPriority;
+    }
+
+    public Long getTimeoutSeconds() {
+        return timeoutSeconds;
+    }
+
+    public void setTimeoutSeconds(Long timeoutSeconds) {
+        this.timeoutSeconds = timeoutSeconds;
+    }
+
 }
 

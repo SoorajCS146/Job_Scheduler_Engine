@@ -627,60 +627,67 @@ Based on your requirements:
 
 ---
 
-#### 2. Add Priority to JobData
-```java
-public class JobData {
-    private JobPriority priority = JobPriority.MEDIUM;  // Default
-    private Instant submittedTime;
+## COMPLETE FILE CHECKLIST
 
-    // Getters/setters
-}
-```
+### Phase 1: Foundation
+- [ ] `src/main/java/com/jobscheduler/model/JobState.java` - Add CANCELLED, TIMED_OUT
+- [ ] `src/main/java/com/jobscheduler/model/JobPriority.java` - **NEW FILE** - Create enum
+- [ ] `src/main/java/com/jobscheduler/model/JobData.java` - Add priority, timeoutSeconds fields
+- [ ] `src/main/java/com/jobscheduler/dto/SubmitJobRequest.java` - Add priority, timeoutSeconds fields
+- [ ] `src/main/java/com/jobscheduler/dto/JobResponse.java` - Add priority, timeoutSeconds fields
+- [ ] `src/main/java/com/jobscheduler/factory/JobFactory.java` - Copy new fields from request to JobData
 
-#### 3. Create PriorityTask Wrapper
-```java
-public class PriorityTask implements Runnable, Comparable<PriorityTask> {
-    private final int jobId;
-    private final JobData jobData;
-    private final Runnable task;
+### Phase 2: Priority Queue
+- [ ] `src/main/java/com/jobscheduler/engine/PriorityTask.java` - **NEW FILE** - Create wrapper class
+- [ ] `src/main/java/com/jobscheduler/engine/JobScheduler.java` - **MAJOR REFACTOR** - Replace executor, add tracking
 
-    public PriorityTask(int jobId, JobData jobData, Runnable task) {
-        this.jobId = jobId;
-        this.jobData = jobData;
-        this.task = task;
-    }
+### Phase 3: Cancellation
+- [ ] `src/main/java/com/jobscheduler/engine/JobScheduler.java` - Add cancelJob() method
+- [ ] `src/main/java/com/jobscheduler/service/JobService.java` - Add cancelJob() method
+- [ ] `src/main/java/com/jobscheduler/controller/JobController.java` - Add DELETE endpoint
+- [ ] `src/main/java/com/jobscheduler/handler/ReportGenerationHandler.java` - Make interruptible
+- [ ] `src/main/java/com/jobscheduler/handler/EmailNotificationHandler.java` - Make interruptible
+- [ ] `src/main/java/com/jobscheduler/handler/DataCleanupHandler.java` - Make interruptible
+- [ ] `src/main/java/com/jobscheduler/handler/DataSyncHandler.java` - Make interruptible
+- [ ] `src/main/java/com/jobscheduler/engine/JobExecutor.java` - Handle InterruptedException
+- [ ] `src/main/java/com/jobscheduler/exception/ConflictException.java` - **NEW FILE** - For 409 errors
 
-    @Override
-    public void run() {
-        task.run();
-    }
+### Phase 4: Timeout
+- [ ] `src/main/java/com/jobscheduler/engine/JobScheduler.java` - Add timeout executor and monitoring
 
-    @Override
-    public int compareTo(PriorityTask other) {
-        // First: compare by priority (lower value = higher priority)
-        int priorityCompare = Integer.compare(
-            this.jobData.getPriority().getValue(),
-            other.jobData.getPriority().getValue()
-        );
+**Total**: 1 new enum, 2 new classes, 1 new exception, 11 modified files
 
-        if (priorityCompare != 0) {
-            return priorityCompare;
-        }
+---
 
-        // Tie-breaker: earlier submission time goes first (FIFO)
-        return this.jobData.getSubmittedTime()
-                   .compareTo(other.jobData.getSubmittedTime());
-    }
+---
 
-    public int getJobId() {
-        return jobId;
-    }
-}
-```
+## SUMMARY: What We're Building
 
-**Why this design?**
-- `Comparable` interface required by `PriorityBlockingQueue`
-- Two-level sorting: priority first, then submission time
-- Wrapper pattern: keeps task logic separate from priority logic
+### New Components
+1. **JobPriority enum** - HIGH(1), MEDIUM(2), LOW(3)
+2. **PriorityTask class** - Wrapper for tasks with priority comparison logic
+3. **Custom ThreadPoolExecutor** - Replaces simple ExecutorService
+4. **Task tracking maps** - Track queued and running jobs for cancellation
+5. **Timeout executor** - Separate thread pool for timeout monitoring
+
+### Modified Components
+1. **JobState** - Add CANCELLED, TIMED_OUT states
+2. **JobData** - Add priority, timeoutSeconds fields
+3. **JobScheduler** - Complete refactor to use custom executor
+4. **All handlers** - Make interruptible with periodic checks
+5. **JobExecutor** - Handle InterruptedException
+6. **DTOs** - Add new fields to request/response
+
+### New Endpoints
+1. `DELETE /api/v1/jobs/{id}` - Cancel a job
+
+### Key Technical Decisions
+- **Queue capacity**: 1000 (configurable)
+- **Default timeout**: 30 seconds (per-job configurable)
+- **Cancellation strategy**: Interrupt signal via `Future.cancel(true)`
+- **Timeout strategy**: Scheduled check + interrupt (reuses cancellation)
+- **Priority ordering**: Priority first, submission time second (FIFO within priority)
+
+---
 
 

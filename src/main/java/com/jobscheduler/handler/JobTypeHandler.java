@@ -12,8 +12,9 @@ public interface JobTypeHandler {
     /**
      * Execute the job using the provided job data
      * @param jobData The job data containing all necessary fields
+     * @throws InterruptedException if the job is cancelled during execution
      */
-    void execute(JobData jobData);
+    void execute(JobData jobData) throws InterruptedException;
     
     /**
      * Get the job type this handler supports

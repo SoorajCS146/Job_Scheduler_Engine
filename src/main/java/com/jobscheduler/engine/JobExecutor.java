@@ -56,12 +56,23 @@ public class JobExecutor {
 
             jobData.setJobState(JobState.COMPLETED);
 
+        }
+        catch (InterruptedException e) {
+            if(jobData.getJobState() == JobState.TIMED_OUT){
+                log.warn("Job {} was interrupted as it timed out", jobId);
+            }
+            else{
+                jobData.setJobState(JobState.CANCELLED);
+                log.warn("Job {} was cancelled", jobId);
+            }
+            failureCause = e;
+            Thread.currentThread().interrupt();
         } catch (Exception e) {
             jobData.setJobState(JobState.FAILED);
             failureCause = e;
             log.error("Job {} failed: {}", jobId, e.getMessage(), e);
-
-        } finally {
+        }
+        finally {
             jobData.setCompletedTime(Instant.now());
 
             // Publish event - listeners will be notified automatically!
