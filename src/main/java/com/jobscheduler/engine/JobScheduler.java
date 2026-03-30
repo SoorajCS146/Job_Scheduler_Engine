@@ -3,7 +3,7 @@ package com.jobscheduler.engine;
 import com.jobscheduler.exception.ConflictException;
 import com.jobscheduler.model.JobData;
 import com.jobscheduler.model.JobState;
-import com.jobscheduler.repository.JobRepository;
+import com.jobscheduler.repository.JobRepositoryInterface;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +28,7 @@ public class JobScheduler {
     private JobExecutor jobExecutor;
 
     @Autowired
-    private JobRepository jobRepository;
+    private JobRepositoryInterface jobRepository;
 
     @Autowired
     private TimeoutManager timeoutManager;
@@ -59,7 +59,7 @@ public class JobScheduler {
                     queuedTasks.remove(task.getJobId());
                     runningJobs.put(task.getJobId(), task);
 
-                    JobData jobData = jobRepository.findById(task.getJobId());
+                    JobData jobData = jobRepository.findByJobId(task.getJobId()).orElse(null);
                     if(jobData != null) {
                         long timeoutSeconds = jobData.getTimeoutSeconds() != null ? jobData.getTimeoutSeconds() : 30L;
                         timeoutManager.scheduleTimeout(task.getJobId(), timeoutSeconds, () -> {
@@ -90,13 +90,9 @@ public class JobScheduler {
      * Schedule a job for execution.
      */
     public void scheduleJob(int jobId) {
-        JobData jobData = jobRepository.findById(jobId);
-        if (jobData == null) {
-            throw new IllegalArgumentException("Job not found with ID: " + jobId);
-        }
-
+        JobData jobData = jobRepository.findByJobId(jobId).orElseThrow(()-> new IllegalArgumentException("Job not found with ID: "+jobId));
         jobData.setJobState(JobState.QUEUED);
-
+        jobRepository.save(jobData);
         // Wrap task in PriorityTask
         PriorityTask priorityTask = new PriorityTask(jobData, () -> {
             try {
@@ -129,7 +125,7 @@ public class JobScheduler {
     }
 
     public boolean cancelJob(int jobId) {
-        JobData job = jobRepository.findById(jobId);
+        JobData job = jobRepository.findByJobId(jobId).orElse(null);
 
         if (job == null) {
             throw new IllegalArgumentException("Job not found: " + jobId);
@@ -149,6 +145,7 @@ public class JobScheduler {
             }
             job.setJobState(JobState.CANCELLED);
             job.setCompletedTime(java.time.Instant.now());
+            jobRepository.save(job);
             log.info("Cancelled queued job {}", jobId);
             return true;
         }
@@ -160,6 +157,7 @@ public class JobScheduler {
             }
             job.setJobState(JobState.CANCELLED);
             job.setCompletedTime(java.time.Instant.now());
+            jobRepository.save(job);
             log.info("Cancelled running job {}", jobId);
             return true;
         }
@@ -167,7 +165,7 @@ public class JobScheduler {
         return false;
     }
     private void handleTimeout(int jobId) {
-        JobData job = jobRepository.findById(jobId);
+        JobData job = jobRepository.findByJobId(jobId).orElse(null);
         if(job!=null && job.getJobState() == JobState.RUNNING) {
             log.warn("Job {} timed out after {}s",jobId,job.getTimeoutSeconds());
 
@@ -178,10 +176,11 @@ public class JobScheduler {
             }
             job.setJobState(JobState.TIMED_OUT);
             job.setCompletedTime(java.time.Instant.now());
+            jobRepository.save(job);
             log.info("Marked job {} as TIMED_OUT", jobId);
         }
         else{
-            if(job == null) {
+            if(job != null) {
                 log.debug("Timeout fired for job{} but state is already {}",jobId,job.getJobState());
             }
         }

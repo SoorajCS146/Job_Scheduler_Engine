@@ -121,10 +121,31 @@ Jobs must have a configurable timeout (default 30 seconds).
 
 **Note:** Multiple worker threads update these stats. The API reads them. Design for high read throughput.
 
+---
 
+## Add-Ons
 
+### Task E: Database-Backed Storage
 
+Replace the in-memory `ConcurrentHashMap` with a relational database.
 
+**Requirements:**
+
+1. **Database Schema**
+   - Design the `jobs` table schema
+   - Store job inputs as a JSON string column
+
+2. **Submission Flow**
+   - The `submit()` API now just writes a row to the DB with state `QUEUED` and returns
+
+3. **Dispatcher (Scheduled Task)**
+   - A dispatcher (scheduled task running every 1 second) polls the DB for ready jobs
+   - Picks the top N based on available capacity
+   - Marks them `RUNNING`
+   - Submits them to the thread pool
+
+4. **Completion**
+   - On completion, update the row in DB
 
 
 
